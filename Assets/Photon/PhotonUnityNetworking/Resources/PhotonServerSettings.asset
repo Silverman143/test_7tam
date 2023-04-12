@@ -43,6 +43,12 @@ MonoBehaviour:
   - Interact
   - DestroyObj
   - CreatePlayer
+  - AddDeadPlayer
+  - PlayerDeadMaster
+  - ShowEndGamePanel
+  - DestroyGameObject
+  - DestroyThis
+  - ActivateSpriteRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

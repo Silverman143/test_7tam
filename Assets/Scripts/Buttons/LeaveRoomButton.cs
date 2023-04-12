@@ -14,6 +14,7 @@ namespace com.Test_7tam
             {
                 PhotonNetwork.LeaveRoom();
             }
+            PhotonNetwork.LoadLevel(0);
         }
     }
 }

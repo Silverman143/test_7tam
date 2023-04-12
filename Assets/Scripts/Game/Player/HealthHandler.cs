@@ -9,9 +9,7 @@ namespace com.Test_7tam
 {
     public class HealthHandler : MonoBehaviourPunCallbacks, IPunObservable
     {
-        [SerializeField] private float _maxHealth = 150;
-        public float MaxHealth => _maxHealth;
-
+        private float _maxHealth;
         private float _healthWas;
         [SerializeField] private float _currentHealth;
         public float CurrentHealth => _currentHealth;
@@ -27,10 +25,15 @@ namespace com.Test_7tam
         {
             if (!photonView.IsMine)
                 return;
-
-            _currentHealth = _maxHealth;
             _playerManager = GetComponent<PlayerManager>();
+        }
 
+        private void Start()
+        {
+            if (!photonView.IsMine)
+                return;
+            _currentHealth = PlayerDataHandler.Instance.MaxHealth;
+            _maxHealth = PlayerDataHandler.Instance.MaxHealth;
         }
 
         private void FixedUpdate()

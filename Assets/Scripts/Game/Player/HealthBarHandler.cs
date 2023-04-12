@@ -2,18 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
+
 namespace com.Test_7tam
 {
-    public class HealthBarHandler : MonoBehaviour
+    public class HealthBarHandler : MonoBehaviourPun
     {
         [SerializeField] private Slider _slider;
         [SerializeField] private HealthHandler _healthHandler;
 
         private float _playerMaxHealth;
 
-        private void Awake()
+        private void Start()
         {
-            _playerMaxHealth = _healthHandler.MaxHealth;
+            _playerMaxHealth = PlayerDataHandler.Instance.MaxHealth;
         }
 
         private void OnEnable()

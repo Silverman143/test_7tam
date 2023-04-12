@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using Photon.Pun;
+using System;
 
 namespace com.Test_7tam
 {
@@ -11,13 +12,17 @@ namespace com.Test_7tam
     [RequireComponent(typeof(PlayerInteractionHandler))]
     public class PlayerManager : MonoBehaviourPunCallbacks
     {
+        [SerializeField] private GameObject[] _playerSpritesObjects;
         [SerializeField] private SpriteRenderer _playerSpriteRenderer;
+        [SerializeField] private float _shootingSpeed = 1;
 
         public static GameObject LocalPlayerInstance;
 
         private HealthHandler _healthHandler;
         private PlayerMovementControllerMono _moveController;
         private PlayerInteractionHandler _interactionHandler;
+
+        private float _shootingTimer = 0;
 
         #region Events
 
@@ -26,6 +31,8 @@ namespace com.Test_7tam
         
         public UnityEvent<Vector2> OnShoot = new UnityEvent<Vector2>();
         public UnityEvent OnPlayerDead = new UnityEvent();
+
+        public static UnityEvent<GameObject> OnLocalPlayerChanged = new UnityEvent<GameObject>();
 
         #endregion
 
@@ -38,8 +45,8 @@ namespace com.Test_7tam
         {
             if (photonView.IsMine)
             {
-                Debug.LogError($"Setting local Player !!!!!!!!!!!");
                 PlayerManager.LocalPlayerInstance = this.gameObject;
+                OnLocalPlayerChanged.Invoke(LocalPlayerInstance);
                 ShootButton.Instance.OnShootButtonDown.AddListener(Shoot);
             }
         }
@@ -50,6 +57,8 @@ namespace com.Test_7tam
                 return;
             base.OnEnable();
             _interactionHandler.OnGetHit.AddListener(GetHit);
+            _interactionHandler.OnCollected.AddListener(CollectItem);
+            _healthHandler.OnHealthEnded.AddListener(KillPlayer);
         }
 
         public override void OnDisable()
@@ -59,7 +68,33 @@ namespace com.Test_7tam
 
             base.OnDisable();
             _interactionHandler.OnGetHit.RemoveListener(GetHit);
+            _interactionHandler.OnCollected.RemoveListener(CollectItem);
             ShootButton.Instance.OnShootButtonDown.RemoveListener(Shoot);
+            _healthHandler.OnHealthEnded.RemoveListener(KillPlayer);
+        }
+
+        private void FixedUpdate()
+        {
+            if (_shootingTimer >= 0)
+            {
+                _shootingTimer -= Time.deltaTime;
+            }
+        }
+
+        public void ActivateSprite(int index)
+        {
+            if (photonView.IsMine)
+            {
+                photonView.RPC("ActivateSpriteRPC", RpcTarget.All, index);
+            }
+        }
+
+        [PunRPC]
+        public void ActivateSpriteRPC(int index)
+        {
+            GameObject spriteObject = _playerSpritesObjects[index];
+            spriteObject.SetActive(true);
+            _playerSpriteRenderer = spriteObject.GetComponent<SpriteRenderer>();
         }
 
         private void FindComponents()
@@ -108,11 +143,18 @@ namespace com.Test_7tam
 
         }
 
-        private void CollectItem()
+        private void CollectItem(CollectableObjectMono item)
         {
             if (!photonView.IsMine)
                 return;
-
+            if(item is Coin)
+            {
+                PlayerDataHandler.Instance.AddCoins();
+            }
+            else
+            {
+                Debug.LogError("The player collected an unknown object");
+            }
         }
 
         private void KillPlayer()
@@ -126,7 +168,15 @@ namespace com.Test_7tam
 
         private void Shoot()
         {
-            OnShoot.Invoke(_moveController.MoveVector.normalized);
+            if (!photonView.IsMine)
+                return;
+
+            if (_shootingTimer <= 0)
+            {
+                OnShoot.Invoke(_moveController.LookVector.normalized);
+                _shootingTimer = _shootingSpeed;
+            }
+            
         }
 
         IEnumerator GetHitEffect()

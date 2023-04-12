@@ -4,6 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 using UnityEngine.SceneManagement;
 using Photon.Realtime;
+using System.Linq;
 
 namespace com.Test_7tam
 {
@@ -12,14 +13,20 @@ namespace com.Test_7tam
     {
         [SerializeField] private GameObject _playerPrefab;
         [SerializeField] private GameObject _weaponPref;
+        [SerializeField] private GameObject _coinPrefab;
+
+        [SerializeField] private Transform _groundTransform;
 
         [SerializeField] Transform[] _spawnPoints;
         [SerializeField] private List<Player> _deadPlayers;
+
+        private List<Player> _activePlayers;
 
         private void Awake()
         {
             _playerPrefab = Resources.Load<GameObject>("PlayerPrefab");
             _weaponPref = Resources.Load<GameObject>("Knife");
+            _deadPlayers = new List<Player>();
         }
         private void Start()
         {
@@ -31,13 +38,15 @@ namespace com.Test_7tam
                 }
                 else
                 {
+                    CreateCoins();
+
                     Player[] players = PhotonNetwork.PlayerList;
-                    Debug.Log($"players = {players.Length}");
 
                     for(int i=0; i<players.Length; i++)
                     {
                         photonView.RPC("CreatePlayer", players[i], i);
                     }
+                    _activePlayers = players.ToList<Player>();
                 }
             }
 
@@ -49,12 +58,28 @@ namespace com.Test_7tam
         {
             GameObject player = PhotonNetwork.Instantiate(_playerPrefab.name, _spawnPoints[index].position, Quaternion.identity, 0);
             PlayerManager playerManager = player.GetComponent<PlayerManager>();
+            playerManager.ActivateSprite(index);
             playerManager.OnShoot.AddListener(CreateKnife);
             playerManager.OnPlayerDead.AddListener(PlayerDead);
         }
 
+        private void CreateCoins()
+        {
+            int amount = Random.Range(10, 20);
+
+            Vector2[] points = MathMethods.GetRandom2DPointsOnGroundSprite(_groundTransform, amount, 10);
+
+            for(int i = 0; i<amount; i++)
+            {
+                Vector3 pos = points[i];
+                pos.z = 3;
+                PhotonNetwork.Instantiate(_coinPrefab.name, pos, Quaternion.identity, 0);
+            }
+        }
+
         private void PlayerDead()
         {
+            PhotonNetwork.Destroy(PlayerManager.LocalPlayerInstance);
             photonView.RPC("PlayerDeadMaster", PhotonNetwork.MasterClient, PhotonNetwork.LocalPlayer);
         }
 
@@ -63,14 +88,30 @@ namespace com.Test_7tam
         {
             if (!PhotonNetwork.IsMasterClient)
                 return;
-            _deadPlayers.Add(player);
-
+            AddDeadPlayer(player);
+            int position = _activePlayers.Count + 1;
+            photonView.RPC("ShowEndGamePanel", player, position);
+            if(_activePlayers.Count == 1)
+            {
+                photonView.RPC("ShowEndGamePanel", _activePlayers[0], 1);
+            }
         }
 
         [PunRPC]
+        private void ShowEndGamePanel(int position)
+        {
+            Debug.Log("show eng game RPC works");
+            GameUIHandler.Instance.ShowEndGamePanel(position);
+        }
+
         private void AddDeadPlayer(Player player)
         {
 
+            if (!_deadPlayers.Contains(player))
+            {
+                _activePlayers.Remove(player);
+                _deadPlayers.Add(player);
+            }
         }
 
         public override void OnEnable()
@@ -82,15 +123,12 @@ namespace com.Test_7tam
         public override void OnDisable()
         {
             base.OnDisable();
-            PlayerManager.LocalPlayerInstance.GetComponent<PlayerWeaponInputHandlerMono>().OnShoot.RemoveListener(CreateKnife);
+            PlayerManager.LocalPlayerInstance?.GetComponent<PlayerWeaponInputHandlerMono>().OnShoot.RemoveListener(CreateKnife);
 
         }
 
         #region Photon Callbacks
 
-        /// <summary>
-        /// Called when the local player left the room. We need to load the launcher scene.
-        /// </summary>
         public override void OnLeftRoom()
         {
             SceneManager.LoadScene(0);
@@ -115,14 +153,26 @@ namespace com.Test_7tam
 
             if (players.Length < 2)
             {
-                PhotonNetwork.LeaveRoom();
-                PhotonNetwork.LoadLevel(0);
+                //PhotonNetwork.LeaveRoom();
+                //PhotonNetwork.LoadLevel(0);
+
+
             }
         }
 
+        [PunRPC]
         private void DestroyGameObject(GameObject obj)
         {
-            PhotonNetwork.Destroy(obj);
+            PhotonView objView = obj.GetPhotonView();
+            if(PhotonNetwork.IsMasterClient)
+            {
+                PhotonNetwork.Destroy(obj);
+            }
+            else
+            {
+                photonView.RPC("DestroyGameObject", PhotonNetwork.MasterClient, obj);
+            }
+            
         }
 
         private void CreateKnife(Vector2 moveVector)
@@ -152,7 +202,7 @@ namespace com.Test_7tam
 
             if (PhotonNetwork.IsMasterClient)
             {
-                Debug.LogFormat("OnPlayerLeftRoom IsMasterClient {0}", PhotonNetwork.IsMasterClient); // called before OnPlayerLeftRoom
+                AddDeadPlayer(other);
             }
             CheckPlayersAmount();
         }

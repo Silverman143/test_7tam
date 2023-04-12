@@ -30,7 +30,6 @@ namespace com.Test_7tam
         {
             if(_maxUsers == PhotonNetwork.CurrentRoom.PlayerCount)
             {
-                Debug.Log("Room is full!!!!!!!!");
                 StartCoroutine(LoadGameCoroutine());
             }
         }
@@ -51,6 +50,7 @@ namespace com.Test_7tam
 
         public override void OnJoinedRoom()
         {
+            _maxUsers = PhotonNetwork.CurrentRoom.MaxPlayers;
             LoadingEvents.OnRoomLoaded.Publish(PhotonNetwork.CurrentRoom.Name, _maxUsers);
             Player[] players = PhotonNetwork.PlayerList;
             foreach(Player player in players)

@@ -13,8 +13,7 @@ GameObject:
   - component: {fileID: 1052522101361974239}
   - component: {fileID: 4137171968639328472}
   - component: {fileID: 1520498738097080888}
-  - component: {fileID: 375588844213110444}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Knife
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -55,9 +54,6 @@ MonoBehaviour:
   _moveSpeed: 20
   _lifeTime: 0
   _isActivate: 0
-  OnDestroy:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!114 &1052522101361974239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123,27 +119,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!50 &375588844213110444
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3768058240854149945}
-  m_BodyType: 1
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 0
-  m_Material: {fileID: 0}
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!1 &3768058242019900047
 GameObject:
   m_ObjectHideFlags: 0
@@ -154,7 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3768058242019900046}
   - component: {fileID: 3768058242019900033}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -239,7 +214,7 @@ GameObject:
   - component: {fileID: 884897934372448009}
   - component: {fileID: 4620516413868119840}
   - component: {fileID: 7068659516368577462}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

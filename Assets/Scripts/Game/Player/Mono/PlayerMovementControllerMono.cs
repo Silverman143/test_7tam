@@ -11,7 +11,9 @@ namespace com.Test_7tam
 
         [SerializeField] protected float _speed;
         [SerializeField] protected Vector2 _moveVector;
+        [SerializeField] protected Vector2 _lookVector;
         public Vector2 MoveVector => _moveVector;
+        public Vector2 LookVector => _lookVector;
 
         protected virtual void Awake()
         {
@@ -41,6 +43,7 @@ namespace com.Test_7tam
             {
                 float angle = Mathf.Atan2(_moveVector.y, _moveVector.x) * Mathf.Rad2Deg;
                 _playerSprite.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+                _lookVector = _moveVector;
             }
         }
     }
